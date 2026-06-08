@@ -1,33 +1,27 @@
-import json
+import json, re, tabulate
+from InquirerPy import prompt, inquirer
 #elementos que tiene que tener el pedido ?
 #Cliente, telefono, direccion, tipo de problema,descripcion,prioridad,estado
 #Voy a usar un diccionario para los datos del pedido
 #Voy a usar una lista de diccionarios para guardar los pedidos
 #agrego pedidos con .append
+
 ARCHIVO_PEDIDOS = "./carpeta_archivos/pedidos.json"
+ARCHIVO_TECNICOS = "./carpeta_archivos/tecnicos.json"
+PRIORIDADES = ("Baja", "Media", "Alta", "Urgente")
+TIPOSDETRABAJOS = ("Aire acondicionado", "Electricidad", "Soporte tecnico")
+REGEXTELEFONO = r"([0-9]{2,4})(15)([0-9]{6,8})"
+REGEXPEDIDOS = r"([0-9]*)"
+REGEXTECNICOS = r"([A-Za-z]*)"
 
-def mostrar_menu(): #muestro el menu de seleccion para el usuario del sistema
-    print("1. Registrar nuevo pedido")
-    print("2. Ver todos los pedidos")
-    print("0. salir")
 
-
-def main(): #funcion principal
-    while True: #bucle 'infinito' para poner la condicion de salida luego
-        mostrar_menu()
-        opcion = input("Seleccione una opcion: ")
-
-        if opcion == "1":
-
-            registrar_pedido()
-        elif opcion == "2":
-            ver_todos_los_pedidos()
-        elif opcion == "0":
-            print("saliendo del sistema...")
-            break #Si el usuario elige salir, rompo el bucle para no seguir ejecutandolo
-        else:
-            print("Opcion invalida. Intente nuevamente.") 
-
+opciones = [
+    {
+        "type": "list",
+        "message": "Que operación vas a realizar?",
+        "choices": ["Registrar nuevo pedido", "Ver todos los pedidos", "Asignar Pedido", "Salir"],
+    },
+]
 
 def registrar_pedido():
     contador_id = 0
@@ -40,13 +34,14 @@ def registrar_pedido():
     except:
         print("El archivo no existe!")
     
-    print("\n REGISTRAR NUEVO PEDIDO")
+    print("\nREGISTRAR NUEVO PEDIDO")
 
     cliente = input("Nombre del cliente: ")
-    telefono = input("Telefono: ")
-    direccion = input("direccion: ")
-    tipo = input("Tipo de problema: ")
+    telefono = ingresarTelefono(input("Ingrese Telefono (Ejemplo: 11-15-1234-5678):"))
+    direccion = input("Direccion: ")
+    tipo = inquirer.select(message="Seleccione Tipo de trabajo:",choices=TIPOSDETRABAJOS).execute()
     descripcion = input("Descripcion breve del problema: ")
+    prioridad = inquirer.select(message="Seleccione Prioridad del trabajo: ",choices=PRIORIDADES).execute()
 
     pedido = {
         "id": contador_id,
@@ -55,7 +50,7 @@ def registrar_pedido():
         "direccion": direccion,
         "tipo": tipo,
         "descripcion": descripcion,
-        "prioridad": "Normal",
+        "prioridad": prioridad,
         "estado": "Pendiente"
     }
 
@@ -88,15 +83,107 @@ def ver_todos_los_pedidos():
     try:
         with open(ARCHIVO_PEDIDOS, "r") as pedidos:
             datos = json.load(pedidos)
-            print("\n LISTA DE PEDIDOS")
+            print("\nLISTA DE PEDIDOS:\n")
             if len(datos) == 0:
                 print("No hay pedidos registrados.")
                 return
+
+            print(tabulate.tabulate(datos,headers="keys"))
+            print()
+
+    except Exception as e :
+        print(f"No hay datos: {e}")
+
+def ingresarTelefono(telefono):
+
+    telefonoIngresado = telefono
+    
+    telefonoInvalido = re.fullmatch(REGEXTELEFONO, telefonoIngresado)
+
+    while not telefonoInvalido:
+        telefonoIngresado = input("Reingrese un telefono valido! (Ejemplo: 11-15-1234-5678): ")
+        telefonoInvalido = re.fullmatch(REGEXTELEFONO, telefonoIngresado)
+
+    return(telefonoIngresado)
+
+def obtenerSubstringSeleccion(seleccion, patron):
+
+    item = re.search(patron, seleccion)
+
+    return item.group()
+
+def seleccionarTarea():
+    listaDePendientes = []
+
+    with open(ARCHIVO_PEDIDOS, "r") as pedidos:
+        datos = json.load(pedidos)
+        
+        for tarea in datos:
+            if tarea["estado"] == "Pendiente":
+                listaDePendientes.append(f"{tarea["id"]} | {tarea["descripcion"]}")
+    
+    tarea = inquirer.select(message="Seleccione tarea a asignar: ",choices=listaDePendientes).execute()
+
+    return tarea
+
+def seleccionarTecnico(tarea):
+
+    listaDeTecnicos = []
+
+    with open(ARCHIVO_TECNICOS, "r") as tecnicos:
+        datos = json.load(tecnicos)
+        
+        for tecnico in datos:
+            listaDeTecnicos.append(f"{tecnico["nombre"]} | {tecnico["trabajos"]}")
+
+    tecnicoAsignado = inquirer.select(message="Seleccione tecnico: ",choices=listaDeTecnicos).execute()
+    
+    asignarTecnico(tecnicoAsignado, tarea)
+
+def asignarTecnico(tecnico, tarea):
+
+    tecnicoFiltrado = obtenerSubstringSeleccion(tecnico, REGEXTECNICOS)
+
+    tarea = obtenerSubstringSeleccion(tarea, REGEXPEDIDOS)
+
+    try:
+        datos = []
+        with open(ARCHIVO_TECNICOS, "r") as tecnicos:
+            datos = json.load(tecnicos)
+    
+            for tecnico in datos:
+                if tecnicoFiltrado in tecnico["nombre"]:
+                    tecnico["trabajos"].append(tarea)
+
+        print(datos)
+
+        with open(ARCHIVO_TECNICOS, "w") as tecnicos:
+            json.dump(datos,tecnicos)
+    except:
+            print("Hubo un error en la asignacion.")
+    
+    print(f"El tecnico {tecnicoFiltrado} ha sido asignado a la tarea {tarea}")
+
+
+
+
+def main(): #funcion principal
+    seguirCargando = True
+    while seguirCargando: #bucle 'infinito' para poner la condicion de salida luego
+        opcion = prompt(opciones)
+        if opcion[0] == opciones[0]["choices"][0]:
+            registrar_pedido()
+        elif opcion[0] == opciones[0]["choices"][1]:
+            ver_todos_los_pedidos()
+        elif opcion[0] == opciones[0]["choices"][2]:
+            seleccionarTecnico(seleccionarTarea())
             
-            for pedido in datos :
-                mostrar_pedido(pedido)
-    except :
-        print("No hay datos")
+        elif opcion[0] == opciones[0]["choices"][3]:
+            print("Saliendo del sistema...")
+            seguirCargando = False #Si el usuario elige salir, rompo el bucle para no seguir ejecutandolo
+        else:
+            print("Opcion invalida. Intente nuevamente.") 
+
 main()
 
 
