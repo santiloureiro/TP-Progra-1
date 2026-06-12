@@ -9,9 +9,10 @@ from InquirerPy import prompt, inquirer
 ARCHIVO_PEDIDOS = "./carpeta_archivos/pedidos.json"
 ARCHIVO_TECNICOS = "./carpeta_archivos/tecnicos.json"
 PRIORIDADES = ("Baja", "Media", "Alta", "Urgente")
+ESTADOS = ("Pendiente", "asignado", "En proceso", "Terminado", "Cancelado") #Agregue esta nueva caracteristica, ESTADOS
 TIPOSDETRABAJOS = ("Aire acondicionado", "Electricidad", "Soporte tecnico")
 REGEXTELEFONO = r"([0-9]{2,4})(15)([0-9]{6,8})"
-REGEXPEDIDOS = r"([0-9]*)"
+REGEXPEDIDOS = r"([0-9]+)" #cambie este regex y le puse un + al final, teniamos un asterisco y podiamos matchearlo con valores vacios, por las dudas.
 REGEXTECNICOS = r"([A-Za-z]*)"
 
 
@@ -19,8 +20,8 @@ opciones = [
     {
         "type": "list",
         "message": "Que operación vas a realizar?",
-        "choices": ["Registrar nuevo pedido", "Ver todos los pedidos", "Asignar Pedido", "Salir"],
-    },
+        "choices": ["Registrar nuevo pedido", "Ver todos los pedidos", "Asignar Pedido","Cambiar estado de pedido","Agregar presupuesto", "Salir"],
+    }, #Agregue dos opciones nuevas "Cambiar estado de pedido" y "Agregar presupuesto"
 ]
 
 def registrar_pedido():
@@ -51,7 +52,9 @@ def registrar_pedido():
         "tipo": tipo,
         "descripcion": descripcion,
         "prioridad": prioridad,
-        "estado": "Pendiente"
+        "estado": "Pendiente",
+        "presupuesto": 0,
+        "detalle_presupuesto": "Sin presupuesto cargado" #agregue dos caracteristicas nuevas ("presupuesto" y "detalle_presupuesto")
     }
 
     try:
@@ -68,15 +71,17 @@ def registrar_pedido():
 
 
 
-def mostrar_pedido(pedido): #traigo cada seccion desde "pedido"
-    print(f"ID: {pedido["id"]}")
-    print(f"Cliente: {pedido["cliente"]}")
-    print(f"Telefono: {pedido["telefono"]}")
-    print(f"Direccion: {pedido["direccion"]}")
-    print(f"Tipo: {pedido["tipo"]}")
-    print(f"Descripcion: {pedido["descripcion"]}")
-    print(f"Prioridad: {pedido["prioridad"]}")
-    print(f"Estado: {pedido["estado"]}")
+def mostrar_pedido(pedido): #traigo cada seccion desde "pedido" , agregue las dos opciones nuevas y  tambien modifique las comillas en los corchetes
+    print(f"ID: {pedido['id']}")
+    print(f"Cliente: {pedido['cliente']}")
+    print(f"Telefono: {pedido['telefono']}")
+    print(f"Direccion: {pedido['direccion']}")
+    print(f"Tipo: {pedido['tipo']}")
+    print(f"Descripcion: {pedido['descripcion']}")
+    print(f"Prioridad: {pedido['prioridad']}")
+    print(f"Estado: {pedido['estado']}")
+    print(f"Presupuesto: {pedido['presupuesto']}")
+    print(f"Detalle presupuesto: {pedido['detalle_presupuesto']}")
 
 
 def ver_todos_los_pedidos():
@@ -112,6 +117,109 @@ def obtenerSubstringSeleccion(seleccion, patron):
 
     return item.group()
 
+def seleccionarPedido(): #agregue esta nueva funcion para seleccionar un pedido y posteriormente usarla para cambiar estados.
+    listaDePedidos = []  #la funcion seleccionartarea la usamos para asignar tecnico a los pedidos pendientes,con esta nueva funcion accedemos a cualquier pedido en cualquier estado.
+
+    try:
+        with open(ARCHIVO_PEDIDOS, "r") as pedidos:
+            datos = json.load(pedidos)
+
+            for pedido in datos:
+                listaDePedidos.append(f"{pedido['id']} | {pedido['cliente']} | {pedido['descripcion']} | Estado: {pedido['estado']}")
+
+        if len(listaDePedidos) == 0:
+            print("No hay pedidos cargados.")
+            return None
+        
+        pedidoSeleccionado = inquirer.select(
+            message="Seleccione un pedido: ",
+            choices=listaDePedidos
+        ).execute()
+
+        return pedidoSeleccionado
+    
+    except Exception as error:
+        print(f"Ocurrio un problema al seleccionar el pedido: {error}")
+
+
+def cambiarEstadoPedido(): #Cambiamos el estado del pedido 
+    pedidoSeleccionado = seleccionarPedido()
+
+    if pedidoSeleccionado == None:
+        return
+    
+    idPedido = obtenerSubstringSeleccion(pedidoSeleccionado, REGEXPEDIDOS)
+
+    nuevoEstado = inquirer.select(
+        message="Seleccione el nuevo estado del pedido: ",
+        choices=ESTADOS
+    ).execute()
+
+    try:
+        with open(ARCHIVO_PEDIDOS, "r") as pedidos:
+            datos = json.load(pedidos)
+
+        pedidoEncontrado = False
+
+        for pedido in datos:
+            if str(pedido["id"]) == idPedido:
+                pedido["estado"] = nuevoEstado
+                pedidoEncontrado = True
+
+        if pedidoEncontrado:
+            with open(ARCHIVO_PEDIDOS, "w") as pedidos:
+                json.dump(datos, pedidos)
+
+            print(f"El pedido {idPedido} cambio su estado a: {nuevoEstado}")
+        else:
+            print("No se encontro el pedido.")
+
+    except Exception as error:
+        print(f"Ocurrio un problema al cambiar el estado: {error}")
+
+
+def ingresarPresupuesto(): #ingresamos presupuesto
+    presupuesto = input("Ingrese el monto del presupuesto: ")
+
+    while not presupuesto.isdigit():
+        presupuesto = input("Reingrese un monto valido, solo numeros: ")
+
+    return int(presupuesto)
+
+def agregarPresupuestoPedido(): #agregamos presupuesto
+    pedidoSeleccionado = seleccionarPedido()
+
+    if pedidoSeleccionado == None:
+        return
+    
+    idPedido = obtenerSubstringSeleccion(pedidoSeleccionado, REGEXPEDIDOS)
+
+    presupuesto = ingresarPresupuesto()
+    detallePresupuesto = input("Ingrese detalle del presupuesto: ")
+
+    try:
+        with open(ARCHIVO_PEDIDOS, "r") as pedidos:
+            datos = json.load(pedidos)
+
+        pedidoEncontrado = False
+
+        for pedido in datos:
+            if str(pedido["id"]) == idPedido:
+                pedido["presupuesto"] = presupuesto
+                pedido["detalle_presupuesto"] = detallePresupuesto
+                pedidoEncontrado = True
+
+        if pedidoEncontrado:
+            with open(ARCHIVO_PEDIDOS, "w") as pedidos:
+                json.dump(datos, pedidos)
+
+            print(f"Presupuesto agregado al pedido {idPedido}.")
+        else:
+            print("No se encontró el pedido.")
+
+    except Exception as error:
+        print(f"Ocurrio un problema al agregar el presupuesto: {error}")
+
 def seleccionarTarea():
     listaDePendientes = []
 
@@ -140,6 +248,22 @@ def seleccionarTecnico(tarea):
     
     asignarTecnico(tecnicoAsignado, tarea)
 
+
+def marcarPedidoComoAgignado(idPedido): #esta funcion va a cambiar el estado de un "pendiente" a "asignado" automaticamente cuando le asignemos un tecnico a un pedido
+    try:
+        with open(ARCHIVO_PEDIDOS, "r") as pedidos:
+            datos = json.load(pedidos)
+
+        for pedido in datos:
+            if str(pedido["id"]) == str(idPedido):
+                pedido["estado"] = "Asignado"
+
+        with open(ARCHIVO_PEDIDOS, "w") as pedidos:
+            json.dump(datos, pedidos)
+
+    except Exception as error:
+        print(f"No se pudo actualizar el estado del pedido: {error}")
+    
 def asignarTecnico(tecnico, tarea):
 
     tecnicoFiltrado = obtenerSubstringSeleccion(tecnico, REGEXTECNICOS)
@@ -159,6 +283,8 @@ def asignarTecnico(tecnico, tarea):
 
         with open(ARCHIVO_TECNICOS, "w") as tecnicos:
             json.dump(datos,tecnicos)
+
+        marcarPedidoComoAgignado(tarea)  # llamo a "marcarPedidoComoAsignado" para cambiar el estado a asignado
     except:
             print("Hubo un error en la asignacion.")
     
@@ -177,8 +303,12 @@ def main(): #funcion principal
             ver_todos_los_pedidos()
         elif opcion[0] == opciones[0]["choices"][2]:
             seleccionarTecnico(seleccionarTarea())
-            
         elif opcion[0] == opciones[0]["choices"][3]:
+            cambiarEstadoPedido()
+        elif opcion[0] == opciones[0]["choices"][4]:           #modifique los numeros de los 'choices' para que matcheen con las nuevas opciones
+            agregarPresupuestoPedido()
+
+        elif opcion[0] == opciones[0]["choices"][5]:
             print("Saliendo del sistema...")
             seguirCargando = False #Si el usuario elige salir, rompo el bucle para no seguir ejecutandolo
         else:
