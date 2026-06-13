@@ -1,25 +1,18 @@
-import json, re, tabulate
+import json, re
 from InquirerPy import prompt, inquirer
+from ver_pedidos import mostrar_pedido, ver_todos_los_pedidos, ver_pedidos_filtrados
+from constantes import ARCHIVO_PEDIDOS, ARCHIVO_TECNICOS, PRIORIDADES, TIPOSDETRABAJOS, REGEXPEDIDOS, REGEXTECNICOS, REGEXTELEFONO
 #elementos que tiene que tener el pedido ?
 #Cliente, telefono, direccion, tipo de problema,descripcion,prioridad,estado
 #Voy a usar un diccionario para los datos del pedido
 #Voy a usar una lista de diccionarios para guardar los pedidos
 #agrego pedidos con .append
 
-ARCHIVO_PEDIDOS = "./carpeta_archivos/pedidos.json"
-ARCHIVO_TECNICOS = "./carpeta_archivos/tecnicos.json"
-PRIORIDADES = ("Baja", "Media", "Alta", "Urgente")
-TIPOSDETRABAJOS = ("Aire acondicionado", "Electricidad", "Soporte tecnico")
-REGEXTELEFONO = r"([0-9]{2,4})(15)([0-9]{6,8})"
-REGEXPEDIDOS = r"([0-9]*)"
-REGEXTECNICOS = r"([A-Za-z]*)"
-
-
 opciones = [
     {
         "type": "list",
         "message": "Que operación vas a realizar?",
-        "choices": ["Registrar nuevo pedido", "Ver todos los pedidos", "Asignar Pedido", "Salir"],
+        "choices": ["Registrar nuevo pedido", "Ver Todos Los Pedidos","Ver Pedidos Filtrados","Asignar Pedido", "Salir"],
     },
 ]
 
@@ -67,32 +60,6 @@ def registrar_pedido():
     print("Pedido registrado correctamente.")
 
 
-
-def mostrar_pedido(pedido): #traigo cada seccion desde "pedido"
-    print(f"ID: {pedido["id"]}")
-    print(f"Cliente: {pedido["cliente"]}")
-    print(f"Telefono: {pedido["telefono"]}")
-    print(f"Direccion: {pedido["direccion"]}")
-    print(f"Tipo: {pedido["tipo"]}")
-    print(f"Descripcion: {pedido["descripcion"]}")
-    print(f"Prioridad: {pedido["prioridad"]}")
-    print(f"Estado: {pedido["estado"]}")
-
-
-def ver_todos_los_pedidos():
-    try:
-        with open(ARCHIVO_PEDIDOS, "r") as pedidos:
-            datos = json.load(pedidos)
-            print("\nLISTA DE PEDIDOS:\n")
-            if len(datos) == 0:
-                print("No hay pedidos registrados.")
-                return
-
-            print(tabulate.tabulate(datos,headers="keys"))
-            print()
-
-    except Exception as e :
-        print(f"No hay datos: {e}")
 
 def ingresarTelefono(telefono):
 
@@ -174,11 +141,12 @@ def main(): #funcion principal
         if opcion[0] == opciones[0]["choices"][0]:
             registrar_pedido()
         elif opcion[0] == opciones[0]["choices"][1]:
-            ver_todos_los_pedidos()
+            ver_todos_los_pedidos(ARCHIVO_PEDIDOS)
         elif opcion[0] == opciones[0]["choices"][2]:
-            seleccionarTecnico(seleccionarTarea())
-            
+            ver_pedidos_filtrados(ARCHIVO_PEDIDOS)
         elif opcion[0] == opciones[0]["choices"][3]:
+            seleccionarTecnico(seleccionarTarea())
+        elif opcion[0] == opciones[0]["choices"][4]:
             print("Saliendo del sistema...")
             seguirCargando = False #Si el usuario elige salir, rompo el bucle para no seguir ejecutandolo
         else:
