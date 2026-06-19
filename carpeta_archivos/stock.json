@@ -1,9 +1,16 @@
 [
     {
-        "id": 0,
+        "id": 1,
+        "nombre": "cables de 40 milimetros",
+        "categoria": "Electricidad",
+        "cantidad": 40,
+        "precio": 100.0
+    },
+    {
+        "id": 2,
         "nombre": "clavos",
         "categoria": "General",
-        "cantidad": 100,
+        "cantidad": 1000,
         "precio": 10.0
     }
 ]
