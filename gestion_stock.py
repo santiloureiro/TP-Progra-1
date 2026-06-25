@@ -6,7 +6,7 @@ opciones = [
     {
         "type": "list",
         "message": "Que operación vas a realizar en el Stock?",
-        "choices": ["Registrar nuevo repuesto", "Ver todo el stock", "Modificar repuesto", "Eliminar repuesto", "Salir"],
+        "choices": ["Registrar nuevo repuesto", "Ver todo el stock", "Modificar repuesto", "Eliminar repuesto", "Volver al Menu Principal"],
     },
 ]
 
@@ -40,8 +40,8 @@ def registrar_repuesto():
     try:
         with open(ARCHIVO_STOCK, "r") as stock:
             datos = json.load(stock)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error al leer el archivo: {e}\n")
     finally:
         datos.append(repuesto)
         with open(ARCHIVO_STOCK, "w") as stock:
@@ -213,27 +213,26 @@ def obtenerSubstringSeleccion(seleccion, patron):
     item = re.search(patron, seleccion)
     return item.group()
 
+def mainStock(): # Ejecucion principal del Modulo de stock 
 
-def mainStock(): 
-    seguirCargando = True
-    while seguirCargando: 
-        opcion = prompt(opciones)
-        
-        if opcion[0] == opciones[0]["choices"][0]:
-            registrar_repuesto()
-            
-        elif opcion[0] == opciones[0]["choices"][1]:
-            ver_todo_el_stock()
+    opcion = prompt(opciones)[0]
 
-        elif opcion[0] == opciones[0]["choices"][2]:
-            modificar_repuesto()
-            
-        elif opcion[0] == opciones[0]["choices"][3]:
-            eliminar_repuesto()
-            
-        elif opcion[0] == opciones[0]["choices"][4]:
-            print("Saliendo del sistema de stock...")
-            seguirCargando = False 
-            
-        else:
-            print("Opcion invalida. Intente nuevamente.") 
+    if opcion == "Registrar nuevo repuesto":
+        registrar_repuesto()
+
+    elif opcion == "Ver todo el stock":
+        ver_todo_el_stock()
+
+    elif opcion == "Modificar repuesto":
+        modificar_repuesto()
+
+    elif opcion == "Eliminar repuesto":
+        eliminar_repuesto()
+
+    elif opcion == "Volver al Menu Principal":
+        return
+
+    else:
+        print("Opción inválida.")
+
+    mainStock() 

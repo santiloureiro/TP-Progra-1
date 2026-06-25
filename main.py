@@ -13,7 +13,7 @@ opciones = [
     },
 ]
 
-def menu():
+def menu(): # Ejecucion principal del programa
     opcion = prompt(opciones)[0]
 
     if opcion == "Registrar nuevo pedido":

@@ -16,7 +16,7 @@ def seleccionarTarea():
         
         for tarea in datos:
             if tarea["estado"] == "Pendiente":
-                listaDePendientes.append(f"{tarea["id"]} | {tarea["descripcion"]}")
+                listaDePendientes.append(f"{tarea['id']} | {tarea['descripcion']}")
     
     tarea = inquirer.select(message="Seleccione tarea a asignar: ",choices=listaDePendientes).execute()
 
@@ -30,7 +30,7 @@ def seleccionarTecnico(tarea):
         datos = json.load(tecnicos)
         
         for tecnico in datos:
-            listaDeTecnicos.append(f"{tecnico["nombre"]} | {tecnico["trabajos"]}")
+            listaDeTecnicos.append(f"{tecnico['nombre']} | {tecnico['trabajos']}")
 
     tecnicoAsignado = inquirer.select(message="Seleccione tecnico: ",choices=listaDeTecnicos).execute()
     

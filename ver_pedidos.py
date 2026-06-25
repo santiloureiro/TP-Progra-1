@@ -4,7 +4,6 @@ from InquirerPy.base.control import Choice
 
 FILTROS = (
     Choice("prioridad", name="Por prioridad >"),
-    Choice("tecnico", name="Por tecnico asignado >"),
     Choice("tipo", name="Por tipo >"),
     Choice("estado", name="Por estado >"),
 )

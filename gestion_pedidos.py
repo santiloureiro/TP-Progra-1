@@ -32,7 +32,7 @@ def registrar_pedido():
         "prioridad": prioridad,
         "estado": "Pendiente",
         "presupuesto": 0,
-        "detalle_presupuesto": "Sin presupuesto cargado" #agregue dos caracteristicas nuevas ("presupuesto" y "detalle_presupuesto")
+        "detalle_presupuesto": "Sin presupuesto cargado"
     }
 
     try:
@@ -61,8 +61,9 @@ def ingresarTelefono(telefono):
 
     return(telefonoIngresado)
 
-def seleccionarPedido(): #agregue esta nueva funcion para seleccionar un pedido y posteriormente usarla para cambiar estados.
-    listaDePedidos = []  #la funcion seleccionartarea la usamos para asignar tecnico a los pedidos pendientes,con esta nueva funcion accedemos a cualquier pedido en cualquier estado.
+#la funcion seleccionarPedido la usamos para asignar tecnico a los pedidos pendientes,con esta nueva funcion accedemos a cualquier pedido en cualquier estado.
+def seleccionarPedido(): 
+    listaDePedidos = [] 
 
     try:
         with open(ARCHIVO_PEDIDOS, "r") as pedidos:
@@ -86,7 +87,7 @@ def seleccionarPedido(): #agregue esta nueva funcion para seleccionar un pedido 
         print(f"Ocurrio un problema al seleccionar el pedido: {error}")
 
 
-def cambiarEstadoPedido(): #Cambiamos el estado del pedido 
+def cambiarEstadoPedido():
     pedidoSeleccionado = seleccionarPedido()
 
     if pedidoSeleccionado == None:
@@ -122,7 +123,7 @@ def cambiarEstadoPedido(): #Cambiamos el estado del pedido
         print(f"Ocurrio un problema al cambiar el estado: {error}")
 
 
-def ingresarPresupuesto(): #ingresamos presupuesto
+def ingresarPresupuesto():
     presupuesto = input("Ingrese el monto del presupuesto: ")
 
     while not presupuesto.isdigit():
@@ -130,7 +131,7 @@ def ingresarPresupuesto(): #ingresamos presupuesto
 
     return int(presupuesto)
 
-def agregarPresupuestoPedido(): #agregamos presupuesto
+def agregarPresupuestoPedido():
     pedidoSeleccionado = seleccionarPedido()
 
     if pedidoSeleccionado == None:
