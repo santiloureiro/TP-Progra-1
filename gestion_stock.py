@@ -1,11 +1,6 @@
 import json, re, tabulate
 from InquirerPy import prompt, inquirer
-
-ARCHIVO_STOCK = "./carpeta_archivos/stock.json"
-CATEGORIAS_STOCK = ("Aire acondicionado", "Electricidad", "Soporte tecnico", "General")
-REGEXCANTIDAD = r"([0-9]+)"
-REGEXPRECIO = r"([0-9]+(\.[0-9]+)?)"
-REGEXID = r"([0-9]+)"
+from constantes import ARCHIVO_STOCK, CATEGORIAS_STOCK, REGEXPRECIO, REGEXID
 
 opciones = [
     {
@@ -56,11 +51,11 @@ def registrar_repuesto():
 
 def ingresarCantidad(cantidad):
     cantidadIngresada = cantidad
-    cantidadInvalida = re.fullmatch(REGEXCANTIDAD, cantidadIngresada)
+    cantidadInvalida = re.fullmatch(REGEXID, cantidadIngresada)
 
     while not cantidadInvalida:
         cantidadIngresada = input("Reingrese una cantidad valida!: ")
-        cantidadInvalida = re.fullmatch(REGEXCANTIDAD, cantidadIngresada)
+        cantidadInvalida = re.fullmatch(REGEXID, cantidadIngresada)
 
     return int(cantidadIngresada)
 
@@ -219,7 +214,7 @@ def obtenerSubstringSeleccion(seleccion, patron):
     return item.group()
 
 
-def main(): 
+def mainStock(): 
     seguirCargando = True
     while seguirCargando: 
         opcion = prompt(opciones)
@@ -242,7 +237,3 @@ def main():
             
         else:
             print("Opcion invalida. Intente nuevamente.") 
-
-
-if __name__ == "__main__":
-    main()

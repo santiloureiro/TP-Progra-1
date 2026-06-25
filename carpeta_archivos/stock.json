@@ -12,5 +12,12 @@
         "categoria": "General",
         "cantidad": 1000,
         "precio": 10.0
+    },
+    {
+        "id": 3,
+        "nombre": "Cables",
+        "categoria": "Soporte tecnico",
+        "cantidad": 300,
+        "precio": 2.0
     }
 ]
