@@ -1,5 +1,5 @@
 import json, re
-from InquirerPy import prompt, inquirer
+from InquirerPy import inquirer
 from constantes import ARCHIVO_PEDIDOS, ARCHIVO_TECNICOS, REGEXTECNICOS, REGEXID
 
 def obtenerSubstringSeleccion(seleccion, patron):
