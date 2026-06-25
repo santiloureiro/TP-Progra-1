@@ -32,7 +32,8 @@ def registrar_pedido():
         "prioridad": prioridad,
         "estado": "Pendiente",
         "presupuesto": 0,
-        "detalle_presupuesto": "Sin presupuesto cargado"
+        "detalle_presupuesto": "Sin presupuesto cargado", #agregue dos caracteristicas nuevas ("presupuesto" y "detalle_presupuesto")
+        "repuestos_encargados": "Sin repuestos encargados"
     }
 
     try:
@@ -164,3 +165,53 @@ def agregarPresupuestoPedido():
 
     except Exception as error:
         print(f"Ocurrio un problema al agregar el presupuesto: {error}")
+
+def agregarRepuestosEncargados():
+    try:
+        with open(ARCHIVO_PEDIDOS, "r") as pedidos:
+            datos = json.load(pedidos)
+
+        estados_permitidos = ["asignado", "en proceso"]
+        listaDePedidos = []
+
+        for pedido in datos:
+            if pedido["estado"].lower() in estados_permitidos:
+                listaDePedidos.append(f"{pedido['id']} | {pedido['cliente']} | {pedido['descripcion']} | Estado: {pedido['estado']}")
+
+        if len(listaDePedidos) == 0:
+            print("No hay pedidos activos para encargar repuestos.")
+            return
+
+        listaDePedidos.append("Volver atrás")
+
+        pedidoSeleccionado = inquirer.select(
+            message="Seleccione un pedido para encargar repuestos: ",
+            choices=listaDePedidos
+        ).execute()
+
+        if pedidoSeleccionado == "Volver atrás":
+            print("Operación cancelada.\n")
+            return
+        
+        idPedido = obtenerSubstringSeleccion(pedidoSeleccionado, REGEXID)
+
+        repuestos = input("Ingrese los repuestos encargados: ")
+
+        pedidoEncontrado = False
+
+        for pedido in datos:
+            if str(pedido["id"]) == idPedido:
+                pedido["repuestos_encargados"] = repuestos
+                pedidoEncontrado = True
+                break
+
+        if pedidoEncontrado:
+            with open(ARCHIVO_PEDIDOS, "w") as pedidos:
+                json.dump(datos, pedidos, indent=4) 
+
+            print(f"✅ Repuestos '{repuestos}' asignados correctamente al pedido {idPedido}.")
+        else:
+            print("No se encontro el pedido.")
+
+    except Exception as error:
+        print(f"Ocurrio un problema al agregar repuestos: {error}")
